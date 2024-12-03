@@ -1,0 +1,361 @@
+<!--index.ejs-->
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loja Católica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="bg-blue-50 font-poppins">
+    <!-- Header e Navegação -->
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="container mx-auto flex justify-between items-center py-4 px-6">
+            <img src="logo.png" alt="Logo" class="h-12">
+            <div class="relative flex-1 max-w-xl mx-auto">
+                <input type="text" placeholder="Digite aqui sua busca..."
+                    class="w-full py-3 px-6 text-gray-800 rounded-full border focus:ring-2 focus:ring-blue-400 outline-none text-lg">
+                <i class="fas fa-search absolute right-5 top-3 text-blue-600"></i>
+            </div>
+            <div class="flex items-center space-x-6">
+                <% if (user) { %>
+                    <span>Bem-vindo, <strong>
+                            <%= user.name %>
+                        </strong></span>
+                    <form action="/logout" method="POST" class="inline-block">
+                        <button type="submit" class="text-white hover:underline">Sair</button>
+                    </form>
+                    <% } else { %>
+                        <a href="#" id="open-login-modal" class="hover:underline flex items-center space-x-2">
+                            <i class="fas fa-user text-xl"></i>
+                            <span>Entrar ou Cadastrar</span>
+                        </a>
+                        <% } %>
+
+                            <a href="#" class="hover:underline flex items-center space-x-2">
+                                <i class="fas fa-heart text-xl"></i>
+                                <span>Favoritos</span>
+                            </a>
+
+                            <!-- Ícone do Carrinho -->
+                            <div class="relative">
+                                <button id="open-cart-modal" class="text-2xl">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <span id="cart-count"
+                                    class="absolute -top-2 -right-2 bg-red-600 text-white text-xs px-1 rounded-full">
+                                    <%= carrinho && Array.isArray(carrinho) ? carrinho.length : 0 %>
+                                </span>
+
+                            </div>
+            </div>
+        </div>
+    </header>
+
+
+<!-- Seção de Carrinho -->
+<div id="cart-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h2 class="text-xl font-bold">Carrinho de Compras</h2>
+            <button id="close-cart-modal" class="text-gray-500 hover:text-gray-800">&times;</button>
+        </div>
+        <div class="mt-4">
+            <!-- Lista de itens do carrinho -->
+            <ul id="cart-modal-content">
+                <% if (carrinho.length > 0) { %>
+                    <% carrinho.forEach(item => { %>
+                        <li class="flex justify-between py-2">
+                            <span>
+                                <%= item.nome %> x <%= item.quantidade %>
+                            </span>
+                            <span>R$ <%= (item.preco * item.quantidade).toFixed(2) %></span>
+                        </li>
+                    <% }); %>
+                    <div class="mt-4 text-right">
+                        <p class="text-lg font-bold">
+                            Total: R$ <span id="total-valor">
+                                <%= carrinho.reduce((total, item) => total + item.preco * item.quantidade, 0).toFixed(2) %>
+                            </span>
+                        </p>
+                        <a href="/checkout" id="checkout-button" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 mt-4">
+                            Finalizar Compra
+                        </a>
+                    </div>
+                <% } else { %>
+                    <li class="text-center text-gray-500">Adicione itens ao carrinho para finalizar a compra.</li>
+                <% } %>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+    <!-- Menu de navegação (Home, Produtos, etc) -->
+    <nav class="bg-blue-700 text-white py-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <button id="categories-button" class="hover:text-blue-300">Todas Categorias</button>
+            <a href="#home" class="hover:text-blue-300">Home</a>
+            <a href="#produtos" class="hover:text-blue-300">Imagens</a>
+            <a href="#sobre" class="hover:text-blue-300">Camisetas</a>
+            <a href="#contato" class="hover:text-blue-300">Acessorios</a>
+            <a href="#contato" class="hover:text-blue-300">Canecas</a>
+            <a href="#contato" class="hover:text-blue-300">Liturgias</a>
+        </div>
+    </nav>
+
+    <!-- Sidebar de Filtro -->
+    <div id="filter-sidebar"
+        class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 transition-all duration-300 ease-in-out">
+        <div
+            class="absolute left-0 top-0 bg-white w-96 h-full p-8 shadow-lg rounded-r-3xl transform translate-x-[-100%] sm:translate-x-0 transition-transform duration-300 ease-in-out">
+            <button id="close-sidebar"
+                class="text-gray-700 text-3xl font-semibold absolute top-4 right-4 hover:text-blue-500 transition-colors">×</button>
+
+            <h2 class="text-2xl font-semibold text-blue-700 mb-8">Filtros de Produtos</h2>
+
+            <!-- Filtro de Tamanho -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Tamanho</h3>
+                <div class="flex flex-wrap gap-4">
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="size-s" class="h-5 w-5 text-blue-500">
+                        <span class="text-gray-700">S</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="size-m" class="h-5 w-5 text-blue-500">
+                        <span class="text-gray-700">M</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="size-l" class="h-5 w-5 text-blue-500">
+                        <span class="text-gray-700">L</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="size-xl" class="h-5 w-5 text-blue-500">
+                        <span class="text-gray-700">XL</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Filtro de Faixa de Preço -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Faixa de Preço</h3>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-500">R$ 0</span>
+                    <input type="range" min="0" max="1000" value="500" class="w-full h-2 bg-blue-100 rounded-lg"
+                        id="price-range">
+                    <span class="text-sm text-gray-500">R$ 1000</span>
+                </div>
+                <div class="flex justify-between mt-2">
+                    <span class="text-gray-600">De R$ 0</span>
+                    <span class="text-gray-600">Até R$ 1000</span>
+                </div>
+            </div>
+
+            <!-- Filtro de Cor -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Cor</h3>
+                <div class="flex space-x-4">
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="color-red"
+                            class="h-6 w-6 bg-red-500 rounded-full border-2 border-gray-300">
+                        <span class="text-gray-700">Vermelho</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="color-blue"
+                            class="h-6 w-6 bg-blue-500 rounded-full border-2 border-gray-300">
+                        <span class="text-gray-700">Azul</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" id="color-green"
+                            class="h-6 w-6 bg-green-500 rounded-full border-2 border-gray-300">
+                        <span class="text-gray-700">Verde</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Filtro de Categoria -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Categoria</h3>
+                <select id="category-filter"
+                    class="w-full py-2 px-4 border border-gray-300 rounded-lg focus:ring-blue-500 focus:outline-none">
+                    <option value="todas">Todas as Categorias</option>
+                    <option value="camisetas">Camisetas</option>
+                    <option value="acessorios">Acessórios</option>
+                    <option value="canecas">Canecas</option>
+                    <option value="liturgias">Liturgias</option>
+                </select>
+            </div>
+
+            <!-- Botão de Aplicar Filtros -->
+            <button
+                class="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6">Aplicar
+                Filtros</button>
+        </div>
+    </div>
+
+
+    <!-- Modal de Login/Registro -->
+
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+            <button id="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-red-500">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <div class="tabs flex justify-around mb-6">
+                <button id="login-tab" class="text-blue-600 font-bold border-b-2 border-blue-600">Login</button>
+                <button id="register-tab" class="text-gray-600 hover:text-blue-600">Registrar</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" action="/login" method="POST" class="space-y-4">
+                <input type="email" name="email" placeholder="Email" required
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <input type="password" name="password" placeholder="Senha" required
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <button type="submit"
+                    class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">
+                    Entrar
+                </button>
+                <p class="text-sm text-center text-gray-600">
+                    Não tem uma conta? <a href="#" id="switch-to-register"
+                        class="text-blue-500 hover:underline">Registrar</a>
+                </p>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" action="/register" method="POST" class="space-y-4 hidden">
+                <input type="text" name="name" placeholder="Nome Completo" required
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <input type="text" name="phone" placeholder="Telefone" required
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <input type="text" name="city" placeholder="Cidade" required
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <input type="email" name="email" placeholder="Email" required
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <input type="password" name="password" placeholder="Senha Forte" required
+                    class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <button type="submit"
+                    class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">
+                    Registrar
+                </button>
+                <p class="text-sm text-center text-gray-600">
+                    Já tem uma conta? <a href="#" id="switch-to-login" class="text-blue-500 hover:underline">Login</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <section class="py-12 bg-gray-50">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-extrabold text-center text-blue-600 mb-10">Destaques</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                <% if (produtos && produtos.length> 0) { %>
+                    <% produtos.forEach(function(produto) { %>
+                        <div
+                            class="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition duration-200">
+                            <a href="/produto/<%= produto.id %>">
+                                <img src="<%= produto.imagem %>" alt="<%= produto.nome %>"
+                                    class="w-full h-56 object-cover rounded-t-lg">
+                            </a>
+                            <div class="p-4">
+                                <h3 class="font-semibold text-lg mb-2 text-gray-800">
+                                    <%= produto.nome %>
+                                </h3>
+                                <p class="text-lg text-blue-600 font-bold">R$ <%= produto.preco.toFixed(2) %> no pix</p>
+
+                                <% if (user) { %>
+                                    <form action="/comprar/<%= produto.id %>" method="POST">
+                                        <label for="quantidade-<%= produto.id %>"
+                                            class="block text-gray-700 font-medium mt-4">
+                                            Quantidade:
+                                        </label>
+                                        <input type="number" id="quantidade-<%= produto.id %>" name="quantidade" min="1"
+                                            value="1"
+                                            class="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600 mt-2"
+                                            required>
+                                        <button type="button"
+                                            class="mt-4 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition btnComprar"
+                                            data-id="<%= produto.id %>">
+                                            Comprar
+                                        </button>
+                                    </form>
+
+                                    <% } else { %>
+                                        <p class="text-red-500 mt-4">Você precisa estar logado para comprar.</p>
+                                        <% } %>
+                            </div>
+                        </div>
+                        <% }) %>
+                            <% } else { %>
+                                <p class="col-span-full text-center text-gray-500">Nenhum produto disponível no momento.
+                                </p>
+                                <% } %>
+            </div>
+        </div>
+    </section>
+    <div id="custom-alert" class="hidden fixed top-4 right-4 bg-blue-500 text-white p-4 rounded shadow-lg">
+        Produto adicionado ao carrinho!
+    </div>
+
+
+    <!-- Footer -->
+    <footer class="bg-blue-700 text-white py-8">
+        <div class="container mx-auto">
+            <!-- Divisão principal do footer -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center sm:text-left">
+                <!-- Sobre nós -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Sobre Nós</h3>
+                    <p class="text-sm">
+                        Somos uma loja dedicada a oferecer produtos de alta qualidade para sua fé e espiritualidade.
+                        Nosso objetivo é servir com amor e dedicação.
+                    </p>
+                </div>
+                <!-- Endereço -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Endereço</h3>
+                    <address class="not-italic text-sm">
+                        R. Alagoas, 3461 <br>
+                        Patrimônio Velho, Votuporanga - SP <br>
+                        CEP: 15502-240
+                    </address>
+                </div>
+                <!-- Redes sociais -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Siga-nos</h3>
+                    <div class="flex justify-center sm:justify-start space-x-4">
+                        <a href="#" class="text-white hover:text-blue-300 text-2xl"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white hover:text-blue-300 text-2xl"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-white hover:text-blue-300 text-2xl"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white hover:text-blue-300 text-2xl"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divisão do rodapé -->
+            <div class="mt-8 border-t border-blue-500 pt-4 text-center text-sm">
+                <p>&copy; 2024 Loja Católica. Todos os direitos reservados.</p>
+                <p class="mt-2">Desenvolvido com <i class="fas fa-heart text-red-500"></i> e fé.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <script src="/modal/script.js"></script>
+</body>
+
+</html>

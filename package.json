@@ -1,0 +1,28 @@
+{
+    "name": "loja-catolica",
+    "version": "1.0.0",
+    "description": "Loja Catolica com funcionalidades de login, produtos e carrinho de compras",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js",
+        "dev": "nodemon app.js"
+    },
+    "dependencies": {
+        "bcrypt": "^5.1.1",
+        "bcryptjs": "^2.4.3",
+        "connect-flash": "^0.1.1",
+        "dotenv": "^16.0.3",
+        "ejs": "^3.1.10",
+        "express": "^4.21.1",
+        "express-session": "^1.18.1",
+        "nodemon": "^2.0.22",
+        "pg": "^8.13.1",
+        "pg-hstore": "^2.3.4",
+        "sequelize": "^6.37.5"
+    },
+    "devDependencies": {
+        "tailwindcss": "^3.0.24"
+    },
+    "author": "MarcosDev001",
+    "license": "MIT"
+}
