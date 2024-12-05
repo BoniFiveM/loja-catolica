@@ -27,39 +27,39 @@ app.use(session({
 // Configuração do connect-flash
 app.use(flash());
 // Rota principal (com filtro de categorias)
+// Rota principal (com filtro de categorias)
 app.get('/', async (req, res) => {
     const user = req.session.user;
-    const categoria = req.query.categoria || null;
-    let carrinho = req.session.carrinho || [];  // Garante que o carrinho seja um array
+    const carrinho = req.session.carrinho || [];
+    const categorias = ['Lançamentos', 'Destaques do Mês', 'Imagens', 'Camisetas', 'Acessórios', 'Canecas', 'Liturgias'];
 
-    // Se carrinho for undefined, inicializa-o como um array vazio
-    if (!Array.isArray(carrinho)) {
-        carrinho = [];
-        req.session.carrinho = carrinho;  // Salva novamente na sessão
-    }
-
-    let query = 'SELECT * FROM products';
-    let values = [];
-
-    if (categoria) {
-        query += ' WHERE categoria = $1';
-        values = [categoria];
-    }
+    const categoria = req.query.categoria || 'Todos';  // Se não houver categoria na query, mostra todos
 
     try {
-        const result = await client.query(query, values);
-        const produtos = result.rows.map(produto => {
-            produto.preco = parseFloat(produto.preco);
-            return produto;
-        });
+        const productsByCategory = {};
+        const query = categoria === 'Todos' 
+            ? 'SELECT * FROM products' 
+            : 'SELECT * FROM products WHERE categoria = $1';
+        const values = categoria === 'Todos' ? [] : [categoria];
 
-        // Passando o carrinho corretamente para a view
-        res.render('index', { user, produtos, categoria, carrinho });  // Passando carrinho para o EJS
+        const result = await client.query(query, values);
+
+        for (let categoria of categorias) {
+            const filteredProducts = result.rows.filter(produto => produto.categoria === categoria);
+            productsByCategory[categoria] = filteredProducts.map(produto => ({
+                ...produto,
+                preco: parseFloat(produto.preco)
+            }));
+        }
+
+        res.render('index', { user, productsByCategory, categorias, carrinho, categoria });
     } catch (error) {
         console.error(error);
         res.status(500).send('Erro ao carregar os produtos.');
     }
 });
+
+
 
 
 
@@ -126,21 +126,20 @@ app.post('/logout', (req, res) => {
 });
 
 // Rota de compra (verificando se o usuário está logado)
-// Finalizar a compra
 app.post('/comprar', async (req, res) => {
     const user = req.session.user;
     const carrinho = req.session.carrinho || [];
 
     if (!user) {
-        return res.redirect('/login');  // Se não estiver logado, redireciona para o login
+        return res.status(401).json({ message: 'Usuário não logado' });  // Retorna erro se o usuário não estiver logado
     }
 
     if (carrinho.length === 0) {
-        return res.redirect('/cart/view');  // Se o carrinho estiver vazio, redireciona para o carrinho
+        return res.status(400).json({ message: 'Carrinho vazio' });  // Retorna erro se o carrinho estiver vazio
     }
 
     try {
-        // Processar a compra - Aqui você pode adicionar a lógica de inserção no banco de dados
+        // Processar a compra - Inserir os itens no banco de dados
         for (const item of carrinho) {
             await client.query(
                 'INSERT INTO compras (usuario_id, produto_id, quantidade, valor_total) VALUES ($1, $2, $3, $4)',
@@ -151,10 +150,14 @@ app.post('/comprar', async (req, res) => {
         // Limpar o carrinho após a compra
         req.session.carrinho = [];
 
-        res.redirect('/');  // Redireciona para a página principal após a compra
+        // Retorna uma resposta de sucesso com a mensagem e carrinho vazio
+        res.json({
+            message: 'Compra realizada com sucesso!',
+            carrinho: req.session.carrinho, // Retorna o carrinho vazio após a compra
+        });
     } catch (error) {
         console.error('Erro ao processar a compra:', error);
-        res.status(500).send('Erro ao processar a compra.');
+        res.status(500).json({ message: 'Erro ao processar a compra.' });
     }
 });
 
@@ -163,26 +166,44 @@ app.post('/comprar', async (req, res) => {
 app.get('/admin', async (req, res) => {
     const user = req.session.user;
     if (!user) {
-        return res.redirect('/login');
+        return res.redirect('/login'); // Redireciona para login caso o usuário não esteja logado
     }
 
+    // Obtém a categoria da query string, com 'Todos' como padrão caso não haja categoria definida
+    const categoria = req.query.categoria || 'Todos';  
+
     try {
-        const result = await client.query('SELECT * FROM products');
-        const produtos = result.rows;
-        res.render('adminpanel', { user, produtos });
+        let query = 'SELECT * FROM products'; // Query inicial para buscar todos os produtos
+        let values = [];
+
+        // Se a categoria for diferente de 'Todos', aplica o filtro por categoria
+        if (categoria !== 'Todos') {
+            query += ' WHERE categoria = $1'; // Filtro para a categoria específica
+            values = [categoria];
+        }
+
+        // Executa a consulta no banco de dados
+        const result = await client.query(query, values);
+        const produtos = result.rows.map(produto => ({
+            ...produto,
+            preco: parseFloat(produto.preco)  // Converte o preço para número flutuante
+        }));
+
+        // Renderiza a página adminpanel.ejs, passando os dados necessários
+        res.render('adminpanel', { user, produtos, categoria });
     } catch (error) {
         console.error(error);
         res.status(500).send('Erro ao carregar o painel de administração.');
     }
 });
 
+
 // Rota para adicionar um novo produto no painel administrativo
 app.post('/admin/produto/adicionar', async (req, res) => {
     const { nome, descricao, preco, categoria, imagem } = req.body;
 
-    console.log('Dados recebidos no backend:', { nome, descricao, preco, categoria, imagem });
+    console.log('Dados recebidos no backend:', req.body);  // Log para depuração
 
-    // Verificação para garantir que os campos obrigatórios não estão vazios
     if (!nome || !descricao || !preco || !categoria) {
         return res.status(400).send('Todos os campos são obrigatórios!');
     }
@@ -197,56 +218,74 @@ app.post('/admin/produto/adicionar', async (req, res) => {
 
     try {
         await client.query(query, values);
-        res.redirect('/admin/produto/listar'); // ou onde você deseja redirecionar
+        res.redirect('/admin/produto/listar');
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao adicionar produto.');
     }
 });
+
+
+
 // Rota para listar os produtos no painel administrativo
 app.get('/admin/produto/listar', async (req, res) => {
-    try {
-        const result = await client.query('SELECT * FROM products');
-        const produtos = result.rows.map(produto => ({
-            ...produto,
-            preco: parseFloat(produto.preco)
-        }));
-
-        res.render('adminpanel', { produtos });
-    } catch (error) {
-        console.error('Erro ao listar produtos:', error);
-        res.status(500).send('Erro ao listar produtos');
+    const user = req.session.user;
+    if (!user) {
+        return res.redirect('/login');
     }
-});
-// Rota de compra
-app.post('/comprar/:id', async (req, res) => {
-    try {
-        const produtoId = req.params.id; // ID do produto enviado na URL
-        const quantidade = parseInt(req.body.quantidade, 10); // Quantidade enviada pelo formulário
 
-        // Validar a quantidade
-        if (isNaN(quantidade) || quantidade < 1) {
-            return res.status(400).send('Quantidade inválida.');
+    const categoria = req.query.categoria || 'Todos';  // Recebe a categoria da query string ou 'Todos' como padrão
+
+    try {
+        let query = 'SELECT * FROM products';
+        let values = [];
+
+        // Se a categoria for diferente de 'Todos', aplica o filtro por categoria
+        if (categoria !== 'Todos') {
+            query += ' WHERE categoria = $1'; // Filtro para a categoria específica
+            values = [categoria];
         }
 
-        // Exemplo de busca do produto no banco de dados (ajuste conforme seu modelo)
-        const produto = await db.query('SELECT * FROM produtos WHERE id = $1', [produtoId]);
-        if (produto.rows.length === 0) {
+        // Executa a consulta no banco de dados
+        const result = await client.query(query, values);
+        const produtos = result.rows.map(produto => ({
+            ...produto,
+            preco: parseFloat(produto.preco)  // Converte o preço para número flutuante
+        }));
+
+        // Renderiza a página adminpanel.ejs, passando os dados necessários
+        res.render('adminpanel', { user, produtos, categoria });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Erro ao carregar o painel de administração.');
+    }
+});
+
+// Rota de compra
+app.post('/comprar/:id', async (req, res) => {
+    const produtoId = req.params.id;
+    const { quantidade } = req.body;
+    const user = req.session.user;
+
+    if (!user) {
+        return res.status(401).send('Você precisa estar logado para realizar uma compra.');
+    }
+
+    try {
+        // Exemplo de uso correto do client em vez de db
+        const produto = await client.query('SELECT * FROM products WHERE id = $1', [produtoId]);
+
+        if (!produto.rows.length) {
             return res.status(404).send('Produto não encontrado.');
         }
 
-        // Calcular o valor total
-        const precoUnitario = produto.rows[0].preco;
-        const valorTotal = precoUnitario * quantidade;
-
-        // Exemplo de lógica para salvar a compra no banco de dados
-        await db.query(
-            'INSERT INTO compras (produto_id, usuario_id, quantidade, valor_total) VALUES ($1, $2, $3, $4)',
-            [produtoId, req.user.id, quantidade, valorTotal]
+        // Inserir no banco de dados a compra
+        await client.query(
+            'INSERT INTO compras (user_id, produto_id, quantidade, data_compra) VALUES ($1, $2, $3, NOW())',
+            [user.id, produtoId, quantidade]
         );
 
-        // Redirecionar ou enviar resposta de sucesso
-        res.redirect('/'); // Redireciona de volta à página inicial após a compra
+        res.send('Compra realizada com sucesso!');
     } catch (error) {
         console.error('Erro ao processar compra:', error);
         res.status(500).send('Erro ao processar a compra.');
@@ -254,32 +293,31 @@ app.post('/comprar/:id', async (req, res) => {
 });
 
 // Adicionar produto ao carrinho
-app.post('/cart/add/:id', (req, res) => {
+app.post('/cart/add/:id', async (req, res) => {
     const produtoId = req.params.id;
+    const { nome, preco } = req.body;
     const quantidade = parseInt(req.body.quantidade, 10) || 1;
 
-    // Inicializar o carrinho na sessão, se não existir
+    // Inicializa o carrinho na sessão
     if (!req.session.carrinho) {
         req.session.carrinho = [];
     }
 
-    // Verificar se o produto já está no carrinho
+    // Verifica se o produto já está no carrinho
     const itemExistente = req.session.carrinho.find(item => item.id === produtoId);
 
     if (itemExistente) {
-        // Atualizar a quantidade se o produto já estiver no carrinho
         itemExistente.quantidade += quantidade;
     } else {
-        // Adicionar novo item ao carrinho
         req.session.carrinho.push({
             id: produtoId,
-            nome: req.body.nome,
-            preco: parseFloat(req.body.preco),
-            quantidade: quantidade
+            nome,
+            preco: parseFloat(preco),
+            quantidade,
         });
     }
 
-    res.redirect('/cart/view'); // Redirecionar para a página do carrinho
+    res.json({ success: true, carrinho: req.session.carrinho });
 });
 
 
