@@ -61,45 +61,7 @@
     </header>
 
 
-   <!-- Seção de Carrinho -->
-<div id="cart-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center hidden">
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
-        <div class="flex justify-between items-center border-b pb-3">
-            <h2 class="text-xl font-bold">Carrinho de Compras</h2>
-            <button id="close-cart-modal" class="text-gray-500 hover:text-gray-800">&times;</button>
-        </div>
-        <div class="mt-4">
-            <!-- Lista de itens do carrinho -->
-            <ul id="cart-modal-content">
-                <% if (carrinho.length > 0) { %>
-                    <% carrinho.forEach(item => { %>
-                        <li class="flex justify-between py-2">
-                            <span>
-                                <%= item.nome %> x <%= item.quantidade %>
-                            </span>
-                            <span>R$ <%= (item.preco * item.quantidade).toFixed(2) %></span>
-                        </li>
-                    <% }); %>
-                    <div class="mt-4 text-right">
-                        <p class="text-lg font-bold">
-                            Total: R$ <span id="total-valor">
-                                <%= carrinho.reduce((total, item) => total + item.preco * item.quantidade, 0).toFixed(2) %>
-                            </span>
-                        </p>
-                        <a href="/checkout" id="checkout-button" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 mt-4">
-                            Finalizar Compra
-                        </a>
-                    </div>
-                <% } else { %>
-                    <li class="text-center text-gray-500">Adicione itens ao carrinho para finalizar a compra.</li>
-                <% } %>
-                
-            </ul>
-        </div>
-    </div>
-</div>
-
-
+   
 
 
 
@@ -303,7 +265,7 @@
                                                 <input type="number" id="quantidade-<%= produto.id %>" name="quantidade"
                                                     min="1" value="1"
                                                     class="w-20 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600">
-                                                    <button type="button"
+                                                <button type="button"
                                                     class="mt-4 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition btnComprar"
                                                     data-id="<%= produto.id %>">
                                                     Comprar
@@ -331,8 +293,7 @@
                                                 <div
                                                     class="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition duration-200">
                                                     <a href="/produto/<%= produto.id %>">
-                                                        <img src="<%= produto.imagem %>" alt="<%= produto.nome %>"
-                                                            class="w-full h-56 object-cover rounded-t-lg">
+                                                        <img src="<%= produto.imagem %>" alt="<%= produto.nome %>" class="w-full h-56 object-cover rounded-t-lg">
                                                     </a>
                                                     <div class="p-4">
                                                         <h3 class="font-semibold text-lg mb-2 text-gray-800">
