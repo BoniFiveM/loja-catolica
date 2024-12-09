@@ -1,0 +1,17 @@
+.text-center img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+  }
+  
+  .text-center img:hover {
+    transform: scale(1.1);
+  }
+  
+  .text-center p {
+    font-size: 14px;
+    color: #333;
+    margin-top: 8px;
+  }
+  

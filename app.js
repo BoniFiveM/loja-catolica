@@ -154,27 +154,26 @@ app.get('/admin', async (req, res) => {
     }
 });
 
-// Rota para adicionar um novo produto no painel administrativo
 app.post('/admin/produto/adicionar', async (req, res) => {
-    const { nome, descricao, preco, categoria, imagem } = req.body;
+    const { nome, descricao, preco, categoria, imagem, quantidade, forma_pagamento } = req.body;
 
     console.log('Dados recebidos no backend:', req.body);
 
-    if (!nome || !descricao || !preco || !categoria) {
+    if (!nome || !descricao || !preco || !categoria || quantidade === undefined || !forma_pagamento) {
         return res.status(400).send('Todos os campos são obrigatórios!');
     }
 
     const precoNum = parseFloat(preco);  
 
     const query = `
-        INSERT INTO products (nome, descricao, preco, categoria, imagem)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO products (nome, descricao, preco, categoria, imagem, quantidade, forma_pagamento)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
     `;
-    const values = [nome, descricao, precoNum, categoria, imagem];
+    const values = [nome, descricao, precoNum, categoria, imagem, parseInt(quantidade), forma_pagamento];
 
     try {
         await client.query(query, values);
-        res.redirect('/admin/produto/listar');
+        res.redirect('/admin/produto/listar'); // Redireciona após o cadastro
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao adicionar produto.');

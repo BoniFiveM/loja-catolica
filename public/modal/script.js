@@ -15,12 +15,10 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.classList.remove('hidden');
         loginForm.classList.remove('hidden');
         registerForm.classList.add('hidden');
-        console.log('Login modal aberto.');
     }
 
     function closeModal() {
         modal.classList.add('hidden');
-        console.log('Login modal fechado.');
     }
 
     function toggleForms(showLoginForm) {
@@ -28,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function () {
         registerForm.classList.toggle('hidden', showLoginForm);
         loginTab.classList.toggle('border-blue-600', showLoginForm);
         registerTab.classList.toggle('border-blue-600', !showLoginForm);
-        console.log('Formulário alternado para:', showLoginForm ? 'Login' : 'Registro');
     }
 
     openModal?.addEventListener('click', openLoginModal);
@@ -56,31 +53,35 @@ document.addEventListener('DOMContentLoaded', function () {
         alerta.textContent = 'Produto adicionado ao carrinho!';
         document.body.appendChild(alerta);
         setTimeout(() => alerta.remove(), 2000);
-        console.log('Alerta exibido: Produto adicionado ao carrinho.');
     }
 
-    function atualizarCarrinho() {
-        const cartModalContent = document.getElementById('cart-modal-content');
-        const total = carrinho.reduce((total, item) => total + item.preco * item.quantidade, 0);
-        const totalValorElement = document.getElementById('total-valor');
+    function atualizarCarrinhoNoModal() {
+        const cartProducts = document.getElementById('cart-products');
+        cartProducts.innerHTML = ''; // Limpar o conteúdo atual do carrinho no modal
 
-        if (cartModalContent) {
-            cartModalContent.innerHTML = carrinho.length
-                ? carrinho.map(item => `
-                    <li class="flex items-center justify-between border-b py-2">
-                        <img src="${item.imagem}" alt="${item.nome}" class="w-16 h-16 object-cover rounded mr-4">
-                        <span>${item.nome} (x${item.quantidade})</span>
-                        <span>R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
-                    </li>
-                `).join('')
-                : '<p class="text-center text-gray-500">Seu carrinho está vazio.</p>';
+        if (carrinho.length > 0) {
+            carrinho.forEach(function (produto) {
+                const produtoElement = document.createElement('div');
+                produtoElement.classList.add('flex', 'items-center', 'justify-between', 'border-b', 'pb-4');
+                produtoElement.innerHTML = `
+                <div class="flex items-center space-x-4">
+                    <img src="${produto.imagem}" alt="${produto.nome}" class="w-16 h-16 object-cover rounded-md">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700">${produto.nome}</h3>
+                        <p class="text-sm text-gray-500">Quantidade: ${produto.quantidade}</p>
+                        <p class="text-sm text-gray-500">Preço Unitário: R$ ${produto.preco ? produto.preco.toFixed(2) : 'N/A'}</p>
+                    </div>
+                </div>
+                <p class="text-blue-600 font-bold">R$ ${(produto.preco * produto.quantidade).toFixed(2)}</p>
+            `;
+                cartProducts.appendChild(produtoElement);
+            });
+        } else {
+            const vazioElement = document.createElement('p');
+            vazioElement.classList.add('text-center', 'text-gray-500');
+            vazioElement.textContent = 'Seu carrinho está vazio.';
+            cartProducts.appendChild(vazioElement);
         }
-
-        if (totalValorElement) {
-            totalValorElement.textContent = total.toFixed(2);
-        }
-
-        console.log('Carrinho atualizado:', carrinho);
     }
 
     function atualizarContadorCarrinho() {
@@ -89,17 +90,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (cartCountElement) {
             cartCountElement.textContent = totalItens;
         }
-        console.log('Contador do carrinho atualizado:', totalItens);
     }
 
     function salvarCarrinhoLocal() {
         localStorage.setItem('carrinho', JSON.stringify(carrinho));
-        console.log('Carrinho salvo no localStorage:', carrinho);
+    }
+
+    function atualizarCarrinho() {
+        atualizarCarrinhoNoModal();
+        atualizarContadorCarrinho();
     }
 
     function adicionarAoCarrinho(produtoId, quantidade) {
-        console.log('Adicionando produto ao carrinho:', { produtoId, quantidade });
-
         const produtoExistente = carrinho.find(item => item.id === produtoId);
         if (produtoExistente) {
             produtoExistente.quantidade += quantidade;
@@ -112,7 +114,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         atualizarCarrinho();
-        atualizarContadorCarrinho();
         salvarCarrinhoLocal();
         mostrarAlerta();
     }
@@ -125,38 +126,97 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Agora, abre o modal do carrinho ao clicar no contador
-    const cartCountElement = document.getElementById('cart-count');
-    cartCountElement?.addEventListener('click', () => {
-        atualizarCarrinho();
-        cartModal.classList.remove('hidden');
-        console.log('Modal do carrinho aberto.');
-    });
-
-    closeCartModal?.addEventListener('click', () => {
-        cartModal.classList.add('hidden');
-        console.log('Modal do carrinho fechado.');
-    });
-
-    checkoutButton?.addEventListener('click', (e) => {
-        e.preventDefault();
-        console.log('Redirecionando para a página de checkout.');
-        window.location.href = '/checkoutbuy';
-    });
-
-    salvarCarrinhoLocal();
-    atualizarCarrinho();
-    atualizarContadorCarrinho();
-
-    // Logout limpa o carrinho
-    const logoutForm = document.querySelector('form[action="/logout"]');
-    if (logoutForm) {
-        logoutForm.addEventListener('submit', function () {
-            console.log('Logout acionado, limpando carrinho.');
-            localStorage.removeItem('carrinho');
-            carrinho = [];
-            atualizarCarrinho();
-            atualizarContadorCarrinho();
-        });
+    // Sincronizar carrinho com servidor no carregamento
+    async function sincronizarCarrinhoComServidor() {
+        if (carrinho.length > 0) {
+            try {
+                const response = await fetch('/sincronizar-carrinho', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ carrinho }),
+                });
+    
+                if (!response.ok) {
+                    throw new Error('Erro ao sincronizar carrinho.');
+                }
+    
+                console.log('Carrinho sincronizado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao sincronizar o carrinho:', error);
+            } finally {
+                console.log('Sincronização do carrinho finalizada.');
+            }
+        }
     }
+    
+   
+
+    sincronizarCarrinhoComServidor();
+    atualizarCarrinho();
+}); document.addEventListener('DOMContentLoaded', function () {
+    const openCartModalButton = document.getElementById('open-cart-modal');
+    const cartModal = document.getElementById('cart-modal');
+    const closeCartModalButton = document.getElementById('close-cart-modal');
+    const finalizarCompraButton = document.getElementById('finalizar-compra');
+
+    function openCartModal() {
+        cartModal.classList.remove('hidden');
+    }
+
+    function closeCartModal() {
+        cartModal.classList.add('hidden');
+    }
+
+    // Fechar o modal antes de redirecionar para "finalizar-pedido"
+    finalizarCompraButton?.addEventListener('click', function (e) {
+        closeCartModal(); // Fecha o modal
+        // O link será seguido após a execução do código
+    });
+
+    openCartModalButton?.addEventListener('click', openCartModal);
+    closeCartModalButton?.addEventListener('click', closeCartModal);
+});
+document.getElementById('finalizar-compra').addEventListener('click', function () {
+    // Redireciona para a página de pagamento
+    window.location.href = '/pagamento'; // Substitua '/pagamento' pela URL da sua página de pagamento
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const cartModal = document.getElementById('cart-modal');
+    const cartProducts = document.getElementById('cart-products');
+    let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+
+    function atualizarCarrinhoNoModal() {
+        cartProducts.innerHTML = '';
+        if (carrinho.length > 0) {
+            carrinho.forEach(produto => {
+                const produtoElement = document.createElement('div');
+                produtoElement.classList.add('flex', 'items-center', 'justify-between', 'border-b', 'pb-4');
+                produtoElement.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <img src="${produto.imagem}" alt="${produto.nome}" class="w-16 h-16 object-cover rounded-md">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700">${produto.nome}</h3>
+                            <p class="text-sm text-gray-500">Quantidade: ${produto.quantidade}</p>
+                            <p class="text-sm text-gray-500">Preço Unitário: R$ ${produto.preco.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <p class="text-blue-600 font-bold">R$ ${(produto.preco * produto.quantidade).toFixed(2)}</p>
+                `;
+                cartProducts.appendChild(produtoElement);
+            });
+        } else {
+            const vazioElement = document.createElement('p');
+            vazioElement.classList.add('text-center', 'text-gray-500');
+            vazioElement.textContent = 'Seu carrinho está vazio.';
+            cartProducts.appendChild(vazioElement);
+        }
+    }
+
+    document.getElementById('close-cart-modal')?.addEventListener('click', () => {
+        cartModal.classList.add('hidden');
+    });
+
+    atualizarCarrinhoNoModal();
 });
