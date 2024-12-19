@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= produto.nome %> - Detalhes</title>
+    <title>
+        <%= produto.nome %> - Detalhes
+    </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css?family=Poppins|Montserrat" rel="stylesheet">
@@ -25,29 +27,31 @@
             </div>
             <div class="flex items-center space-x-6">
                 <% if (user) { %>
-                    <span>Bem-vindo, <strong><%= user.name %></strong></span>
+                    <span>Bem-vindo, <strong>
+                            <%= user.name %>
+                        </strong></span>
                     <form action="/logout" method="POST" class="inline-block">
                         <button type="submit" class="text-white hover:underline">Sair</button>
                     </form>
-                <% } else { %>
-                    <a href="#" id="open-login-modal" class="hover:underline flex items-center space-x-2">
-                        <i class="fas fa-user text-xl"></i>
-                        <span>Entrar ou Cadastrar</span>
-                    </a>
-                <% } %>
-                <a href="#" class="hover:underline flex items-center space-x-2">
-                    <i class="fas fa-heart text-xl"></i>
-                    <span>Favoritos</span>
-                </a>
-                <div class="relative">
-                    <button id="open-cart-modal" class="text-2xl">
-                        <i class="fas fa-shopping-cart"></i>
-                    </button>
-                    <span id="cart-count"
-                        class="absolute -top-2 -right-2 bg-red-600 text-white text-xs px-1 rounded-full">
-                        <%= carrinho && Array.isArray(carrinho) ? carrinho.length : 0 %>
-                    </span>
-                </div>
+                    <% } else { %>
+                        <a href="#" id="open-login-modal" class="hover:underline flex items-center space-x-2">
+                            <i class="fas fa-user text-xl"></i>
+                            <span>Entrar ou Cadastrar</span>
+                        </a>
+                        <% } %>
+                            <a href="#" class="hover:underline flex items-center space-x-2">
+                                <i class="fas fa-heart text-xl"></i>
+                                <span>Favoritos</span>
+                            </a>
+                            <div class="relative">
+                                <button id="open-cart-modal" class="text-2xl">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <span id="cart-count"
+                                    class="absolute -top-2 -right-2 bg-red-600 text-white text-xs px-1 rounded-full">
+                                    <%= carrinho && Array.isArray(carrinho) ? carrinho.length : 0 %>
+                                </span>
+                            </div>
             </div>
         </div>
     </header>
@@ -64,68 +68,87 @@
         </div>
     </nav>
 
-   <!-- Conteúdo principal -->
-<main class="max-w-7xl mx-auto my-10 p-4">
-    <div class="flex flex-col md:flex-row bg-white shadow-lg rounded-lg p-6">
-        <!-- Imagem do produto -->
-        <div class="md:w-1/2 mb-6 md:mb-0">
-            <img src="<%= produto.imagem %>" alt="<%= produto.nome %>" class="w-full h-auto rounded-lg shadow-lg transform transition duration-500 hover:scale-105" />
-        </div>
-        <!-- Detalhes do produto -->
-        <div class="md:w-1/2 md:pl-12">
-            <h1 class="text-3xl font-semibold text-gray-800 mb-4 hover:text-blue-600 transition duration-300"><%= produto.nome %></h1>
-            <p class="text-xl font-semibold text-red-600 mb-4">R$ <%= parseFloat(produto.preco).toFixed(2) %></p>
-            <p class="text-gray-700 mb-4"><strong>Descrição:</strong> <%= produto.descricao %></p>
-            <p class="text-gray-700 mb-4"><strong>Categoria:</strong> <%= produto.categoria %></p>
-            <div class="text-gray-700 mb-4"><strong>Disponibilidade:</strong> <%= produto.disponibilidade ? 'Em estoque' : 'Fora de estoque' %></div>
+    <!-- Conteúdo principal -->
+    <main class="max-w-7xl mx-auto my-10 p-4">
+        <div class="flex flex-col md:flex-row bg-white shadow-lg rounded-lg p-6">
+            <!-- Imagem do produto -->
+            <div class="md:w-1/2 mb-6 md:mb-0">
+                <img src="<%= produto.imagem %>" alt="<%= produto.nome %>"
+                    class="w-full h-auto rounded-lg shadow-lg transform transition duration-500 hover:scale-105" />
+            </div>
+            <!-- Detalhes do produto -->
+            <div class="md:w-1/2 md:pl-12">
+                <h1 class="text-3xl font-semibold text-gray-800 mb-4 hover:text-blue-600 transition duration-300">
+                    <%= produto.nome %>
+                </h1>
+                <p class="text-xl font-semibold text-red-600 mb-4">R$ <%= parseFloat(produto.preco).toFixed(2) %>
+                </p>
+                <p class="text-gray-700 mb-4"><strong>Descrição:</strong>
+                    <%= produto.descricao %>
+                </p>
+                <p class="text-gray-700 mb-4"><strong>Categoria:</strong>
+                    <%= produto.categoria %>
+                </p>
+                <div class="text-gray-700 mb-4"><strong>Disponibilidade:</strong>
+                    <%= produto.quantidade > 0 ? 'Em estoque: ' + produto.quantidade : 'Fora de estoque' %>
+                </div>
 
-            <!-- Avaliações -->
-            <div class="text-gray-700 mb-4">
-                <strong>Avaliações:</strong>
-                <% if (produto.avaliacoes && produto.avaliacoes.length > 0) { %>
-                    <ul class="list-inside space-y-2">
-                        <% produto.avaliacoes.forEach(avaliacao => { %>
-                            <li>
-                                <span class="font-semibold"><%= avaliacao.usuario %>:</span> <%= avaliacao.comentario %>
-                                <span class="text-yellow-500"><%= '★'.repeat(avaliacao.nota) %></span>
-                            </li>
-                        <% }) %>
-                    </ul>
+                <!-- Avaliações -->
+                <div class="text-gray-700 mb-4">
+                    <strong>Avaliações:</strong>
+                    <% if (produto.avaliacoes && produto.avaliacoes.length > 0) { %>
+                        <ul class="list-inside space-y-2">
+                            <% produto.avaliacoes.forEach(avaliacao => { %>
+                                <li>
+                                    <span class="font-semibold">
+                                        <%= avaliacao.usuario %>:
+                                    </span>
+                                    <%= avaliacao.comentario %>
+                                    <span class="text-yellow-500">
+                                        <%= '★'.repeat(avaliacao.nota) %>
+                                    </span>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    <% } else { %>
+                        <p class="text-gray-700">Este produto ainda não tem avaliações.</p>
+                    <% } %>
+                </div>
+<!-- Opções de pagamento -->
+<div class="text-gray-700 mb-4">
+    <strong>Forma de pagamento:</strong>
+
+    <!-- Texto para exibir o parcelamento escolhido -->
+    <div class="mt-2" id="pagamento-texto">
+        <p class="text-sm text-gray-800" id="parcelamento">3x de R$ <%= (produto.preco / 3).toFixed(2) %> no cartão de crédito</p>
+    </div>
+
+    <!-- Texto com preço à vista -->
+    <div class="mt-2" id="pagamento-desconto">
+        <p class="text-sm text-gray-800">R$ <%= (produto.preco * (1 - 0.03)).toFixed(2) %> à vista no boleto ou pix (3% Desconto)</p>
+        <p class="text-sm text-green-600">Economize R$ <%= (produto.preco * 0.03).toFixed(2) %></p>
+    </div>
+</div>
+
+
+
+                <!-- Formulário -->
+                <% if (user) { %>
+                    <form action="/adicionar-carrinho" method="POST" class="flex flex-col items-start space-y-4">
+                        <input type="hidden" name="produtoId" value="<%= produto.id %>">
+                        <input type="number" name="quantidade" value="1" min="1"
+                            class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+                        <!-- Botão Comprar -->
+                        <button type="submit"
+                            class="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition duration-300 w-full">Comprar</button>
+                    </form>
                 <% } else { %>
-                    <p class="text-gray-700">Este produto ainda não tem avaliações.</p>
+                    <p>Faça <a href="/login" class="text-blue-600 hover:underline">login</a> para comprar.</p>
                 <% } %>
             </div>
-
-            <!-- Opções de pagamento -->
-            <div class="text-gray-700 mb-4">
-                <strong>Forma de pagamento:</strong>
-                <div class="mt-2">
-                    <p class="text-sm text-gray-800">1x de R$ <%= parseFloat(produto.preco).toFixed(2) %> no cartão de crédito</p>
-                    <% 
-                    const desconto = 0.03; 
-                    const precoComDesconto = parseFloat(produto.preco) * (1 - desconto); 
-                    const economia = parseFloat(produto.preco) - precoComDesconto;
-                    %>
-                    <p class="text-sm text-gray-800">R$ <%= precoComDesconto.toFixed(2) %> à vista no boleto ou pix (3% Desconto)</p>
-                    <p class="text-sm text-green-600">Economize R$ <%= economia.toFixed(2) %></p>
-                </div>
-            </div>
-
-            <!-- Formulário -->
-            <% if (user) { %>
-                <form action="/adicionar-carrinho" method="POST" class="flex flex-col items-start space-y-4">
-                    <input type="hidden" name="produtoId" value="<%= produto.id %>">
-                    <input type="number" name="quantidade" value="1" min="1" class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    
-                    <!-- Botão Comprar -->
-                    <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition duration-300 w-full">Comprar</button>
-                </form>
-            <% } else { %>
-                <p>Faça <a href="/login" class="text-blue-600 hover:underline">login</a> para comprar.</p>
-            <% } %>
         </div>
-    </div>
-</main>
+    </main>
 
     <!-- Rodapé -->
     <footer class="bg-blue-700 text-white py-8">
@@ -168,6 +191,32 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        // Espera o DOM carregar antes de iniciar o script
+        document.addEventListener("DOMContentLoaded", function() {
+    const parcelasSelect = document.getElementById("parcelas");
+    const pagamentoTexto = document.getElementById("pagamento-texto");
+    const precoProduto = parseFloat(pagamentoTexto.querySelector("p").getAttribute("data-preco"));
+    
+    // Função para atualizar o texto de parcelamento
+    function atualizarParcelamento() {
+        const parcelas = parseInt(parcelasSelect.value);
+        const valorParcela = precoProduto / parcelas;
+    
+        // Atualiza a exibição do parcelamento escolhido
+        pagamentoTexto.innerHTML = `<p class="text-sm text-gray-800">${parcelas}x de R$ ${valorParcela.toFixed(2)} no cartão de crédito</p>`;
+    }
+
+    // Chama a função quando o usuário muda a seleção
+    parcelasSelect.addEventListener("change", atualizarParcelamento);
+    
+    // Inicializa com o valor de 1 parcela
+    atualizarParcelamento();
+});
+
+    </script>
+    
 </body>
 
 </html>

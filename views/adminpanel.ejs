@@ -18,57 +18,75 @@
         </div>
     </nav>
 
-    <!-- Formulário para adicionar produto -->
-    <section class="py-12 bg-white shadow-md rounded-lg mx-4 sm:mx-10 md:mx-20">
-        <div class="container mx-auto">
-            <h2 class="text-3xl font-bold text-center text-blue-600 mb-8">Adicionar Novo Produto</h2>
-            <form action="/admin/produto/adicionar" method="POST" class="space-y-4">
-                <input type="text" name="nome" placeholder="Nome do Produto" required
-                    class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
-                <input type="text" name="preco" placeholder="Preço" required
-                    class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
-                <input type="text" name="imagem" placeholder="URL da Imagem" required
-                    class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
-                <textarea name="descricao" placeholder="Descrição do Produto" required
-                    class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"></textarea>
-                <select name="categoria" required
-                    class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
-                    <option value="Imagens">Imagens</option>
-                    <option value="Camisetas">Camisetas</option>
-                    <option value="Acessorios">Acessórios</option>
-                    <option value="Canecas">Canecas</option>
-                    <option value="Liturgias">Liturgias</option>
-                </select>
-                <button type="submit"
-                    class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">
-                    Adicionar Produto
-                </button>
-            </form>
-        </div>
-    </section>
+   <!-- Formulário para adicionar produto -->
+<section class="py-12 bg-white shadow-md rounded-lg mx-4 sm:mx-10 md:mx-20">
+    <div class="container mx-auto">
+        <h2 class="text-3xl font-bold text-center text-blue-600 mb-8">Adicionar Novo Produto</h2>
+        <form action="/admin/produto/adicionar" method="POST" class="space-y-4">
+            <input type="text" name="nome" placeholder="Nome do Produto" required value="Presépio em Resina - 20cm" 
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
+            <input type="text" name="preco" id="preco" placeholder="Preço" required value="590.00" 
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
+            <input type="text" name="imagem" placeholder="URL da Imagem" required 
+                value="https://static.lvartigosreligiosos.com.br/public/liriodovale/imagens/produtos/media/presepio-em-resina-20cm-64da566054a32.png" 
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
+            <textarea name="descricao" placeholder="Descrição do Produto" required
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">Descrição do produto Presépio em Resina - 20cm</textarea>
+            <input type="number" name="quantidade" placeholder="Quantidade em Estoque" required value="0" 
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
+            
+            <select name="forma_pagamento" id="forma_pagamento" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
+                <option value="1x no cartão de crédito" selected>1x no cartão de crédito</option>
+                <option value="2x no cartão de crédito">2x no cartão de crédito</option>
+                <option value="3x no cartão de crédito">3x no cartão de crédito</option>
+                <option value="4x no cartão de crédito">4x no cartão de crédito</option>
+            </select>
+
+            <!-- Exibição das parcelas e desconto -->
+            <div class="mt-4" id="pagamento-texto" data-preco="590.00">
+                <p class="text-sm text-gray-800">1x de R$ 590,00 no cartão de crédito</p>
+            </div>
+            <div class="mt-2" id="pagamento-desconto">
+                <p class="text-sm text-gray-800">R$ 571,30 à vista no boleto ou pix (3% Desconto)</p>
+                <p class="text-sm text-green-600">Economize R$ 18,70</p>
+            </div>
+                
+            <select name="categoria" required
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
+                <option value="Imagens" selected>Imagens</option>
+                <option value="Camisetas">Camisetas</option>
+                <option value="Acessorios">Acessórios</option>
+                <option value="Canecas">Canecas</option>
+                <option value="Liturgias">Liturgias</option>
+            </select>
+
+            <!-- Novo campo para escolher o Santo -->
+            <select name="santo" id="santo" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400">
+                <option value="" selected>Selecione o Santo</option>
+                <option value="SaoJorge">São Jorge</option>
+                <option value="SaoFrancisco">São Francisco</option>
+                <option value="SaoPaulo">São Paulo</option>
+                <option value="SantaTeresa">Santa Teresa</option>
+                <option value="SaoAntonio">São Antônio</option>
+                <option value="SantaTerezinha">Santa Terezinha</option>
+                <option value="SaoPedro">São Pedro</option>
+                <option value="SantaRita">Santa Rita</option>
+                <option value="SantaLucia">Santa Lúcia</option>
+                <option value="Maria">Maria</option>
+            </select>
+
+            <button type="submit"
+                class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">
+                Adicionar Produto
+            </button>
+        </form>
+    </div>
+</section>
 
     <!-- Lista de Produtos Cadastrados -->
     <section class="py-12 bg-gray-50 mt-12">
         <div class="container mx-auto">
             <h2 class="text-3xl font-bold text-center text-blue-600 mb-8">Produtos Cadastrados</h2>
-            
-            <!-- Filtro por Categoria -->
-            <form method="GET" action="/admin">
-                <select name="categoria" class="p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 mb-4">
-                    <option value="Todos" <%= categoria === 'Todos' ? 'selected' : '' %>>Todos</option>
-                    <option value="Imagens" <%= categoria === 'Imagens' ? 'selected' : '' %>>Imagens</option>
-                    <option value="Camisetas" <%= categoria === 'Camisetas' ? 'selected' : '' %>>Camisetas</option>
-                    <option value="Acessorios" <%= categoria === 'Acessorios' ? 'selected' : '' %>>Acessórios</option>
-                    <option value="Canecas" <%= categoria === 'Canecas' ? 'selected' : '' %>>Canecas</option>
-                    
-                </select>
-                <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-                    Filtrar
-                </button>
-            </form>
-            
-            
-    
             <!-- Exibição dos Produtos -->
             <div class="overflow-x-auto">
                 <table class="w-full bg-white border border-gray-300 rounded-lg shadow-md">
@@ -83,29 +101,53 @@
                     <tbody>
                         <% produtos.forEach(produto => { %>
                             <tr class="border-b border-gray-200">
-                                <td class="px-4 py-2 font-semibold">
-                                    <%= produto.nome %>
-                                </td>
+                                <td class="px-4 py-2 font-semibold"><%= produto.nome %></td>
+                                <td class="px-4 py-2">R$ <%= produto.preco.toFixed(2) %></td> <!-- Exibe preço formatado -->
                                 <td class="px-4 py-2">
-                                    R$ <%= parseFloat(produto.preco || 0).toFixed(2) %>
+                                    <img src="<%= produto.imagem %>" alt="<%= produto.nome %>" class="w-16 h-16 object-cover rounded-lg">
                                 </td>
+                                <td class="px-4 py-2"><%= produto.santo %></td> <!-- Exibe o Santo -->
                                 <td class="px-4 py-2">
-                                    <img src="<%= produto.imagem %>" alt="<%= produto.nome %>"
-                                        class="w-16 h-16 object-cover rounded-lg">
-                                </td>
-                                <td class="px-4 py-2">
-                                    <a href="/admin/produto/editar/<%= produto.id %>" 
-                                        class="text-blue-600 hover:text-blue-800 font-medium">Editar</a> |
-                                    <a href="/admin/produto/deletar/<%= produto.id %>" 
-                                        class="text-red-600 hover:text-red-800 font-medium">Deletar</a>
+                                    <a href="/admin/produto/editar/<%= produto.id %>" class="text-blue-600 hover:text-blue-800">Editar</a> |
+                                    <a href="/admin/produto/deletar/<%= produto.id %>" class="text-red-600 hover:text-red-800">Deletar</a>
                                 </td>
                             </tr>
                         <% }) %>
                     </tbody>
+                    
                 </table>
             </div>
         </div>
     </section>
+
+    <!-- Script para cálculo de parcelas e desconto -->
+    <script>
+        document.getElementById("forma_pagamento").addEventListener("change", function() {
+            // Obtém o valor da forma de pagamento selecionada
+            const formaPagamento = this.value;
+            
+            // Obtém o preço do produto do atributo data-preco
+            const precoProduto = parseFloat(document.getElementById("pagamento-texto").getAttribute("data-preco"));
+            
+            // Número de parcelas
+            let parcelas = parseInt(formaPagamento.split("x")[0]);
+        
+            // Calcula o valor da parcela
+            const valorParcela = precoProduto / parcelas;
+        
+            // Exibe o preço conforme a forma de pagamento
+            const pagamentoTexto = document.getElementById("pagamento-texto");
+            pagamentoTexto.innerHTML = `<p class="text-sm text-gray-800">${parcelas}x de R$ ${valorParcela.toFixed(2)} no cartão de crédito</p>`;
+            
+            // Atualiza o texto com o preço à vista com desconto
+            const desconto = 0.03;
+            const precoComDesconto = precoProduto * (1 - desconto);
+            const economia = precoProduto - precoComDesconto;
+            const pagamentoDescontoTexto = document.getElementById("pagamento-desconto");
+            pagamentoDescontoTexto.innerHTML = `<p class="text-sm text-gray-800">R$ ${precoComDesconto.toFixed(2)} à vista no boleto ou pix (3% Desconto)</p>
+            <p class="text-sm text-green-600">Economize R$ ${economia.toFixed(2)}</p>`; 
+        });
+    </script>
 
 </body>
 

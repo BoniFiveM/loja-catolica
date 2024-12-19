@@ -29,26 +29,44 @@ app.use(flash());
 // Rota principal (sem carrinho)
 app.get('/', async (req, res) => {
     const user = req.session.user;
-    const categorias = ['Lançamentos', 'Destaques do Mês', 'Imagens', 'Camisetas', 'Acessórios', 'Canecas', 'Liturgias'];
+    const categorias = ['Lançamentos', 'Destaques do Mês', 'Imagens', 'Camisetas', 'Acessorios', 'Canecas', 'Liturgias'];
 
     const categoria = req.query.categoria || 'Todos';  // Se não houver categoria na query, mostra todos
 
     try {
-        const productsByCategory = {};
-        const query = categoria === 'Todos' 
-            ? 'SELECT * FROM products' 
-            : 'SELECT * FROM products WHERE categoria = $1';
-        const values = categoria === 'Todos' ? [] : [categoria];
+        let query;
+        let values = [];
 
+        // Verifica se a categoria é um santo, caso contrário filtra pela categoria
+        if (categoria === 'Todos') {
+            query = 'SELECT * FROM products';  // Todos os produtos
+        } else {
+            // Verifica se a categoria é um santo
+            const isSanto = ['SaoJorge', 'SaoPaulo', 'SaoAntonio'].includes(categoria);  // Adicione santos conforme necessário
+            if (isSanto) {
+                query = 'SELECT * FROM products WHERE santo = $1';  // Filtro pelo santo
+                values = [categoria];
+            } else {
+                query = 'SELECT * FROM products WHERE categoria = $1';  // Filtro pela categoria
+                values = [categoria];
+            }
+        }
+
+        // Executa a consulta ao banco de dados
         const result = await client.query(query, values);
 
-        for (let categoria of categorias) {
+        // Imprimir os resultados para depuração
+        console.log('Produtos encontrados:', result.rows);  // Verifique os dados retornados
+
+        // Organiza os produtos por categoria
+        const productsByCategory = categorias.reduce((acc, categoria) => {
             const filteredProducts = result.rows.filter(produto => produto.categoria === categoria);
-            productsByCategory[categoria] = filteredProducts.map(produto => ({
+            acc[categoria] = filteredProducts.map(produto => ({
                 ...produto,
-                preco: parseFloat(produto.preco)
+                preco: parseFloat(produto.preco)  // Garantir que o preço seja um número
             }));
-        }
+            return acc;
+        }, {});
 
         // Passa o carrinho da sessão para a view
         res.render('index', { user, productsByCategory, categorias, categoria, carrinho: req.session.carrinho });
@@ -57,6 +75,7 @@ app.get('/', async (req, res) => {
         res.status(500).send('Erro ao carregar os produtos.');
     }
 });
+
 
 
 
@@ -155,61 +174,66 @@ app.get('/admin', async (req, res) => {
 });
 
 app.post('/admin/produto/adicionar', async (req, res) => {
-    const { nome, descricao, preco, categoria, imagem, quantidade, forma_pagamento } = req.body;
+    const { nome, descricao, preco, categoria, imagem, santo } = req.body;
 
     console.log('Dados recebidos no backend:', req.body);
 
-    if (!nome || !descricao || !preco || !categoria || quantidade === undefined || !forma_pagamento) {
+    // Verificar se os campos obrigatórios foram preenchidos
+    if (!nome || !descricao || !preco || !categoria || !santo) {
         return res.status(400).send('Todos os campos são obrigatórios!');
     }
 
-    const precoNum = parseFloat(preco);  
+    const precoNum = parseFloat(preco);  // Converte o preço para número
 
+    // Consulta SQL para inserir o produto, incluindo o campo 'santo'
     const query = `
-        INSERT INTO products (nome, descricao, preco, categoria, imagem, quantidade, forma_pagamento)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO products (nome, descricao, preco, categoria, imagem, santo)
+        VALUES ($1, $2, $3, $4, $5, $6)
     `;
-    const values = [nome, descricao, precoNum, categoria, imagem, parseInt(quantidade), forma_pagamento];
+    const values = [nome, descricao, precoNum, categoria, imagem, santo];
 
     try {
+        // Executa a query para inserir o produto no banco de dados
         await client.query(query, values);
-        res.redirect('/admin/produto/listar'); // Redireciona após o cadastro
+        res.redirect('/admin/produto/listar');
     } catch (err) {
         console.error(err);
         res.status(500).send('Erro ao adicionar produto.');
     }
 });
 
-// Rota para listar os produtos no painel administrativo
+
 app.get('/admin/produto/listar', async (req, res) => {
     const user = req.session.user;
     if (!user) {
-        return res.redirect('/login');
+        return res.redirect('/login'); // Redireciona caso o usuário não esteja logado
     }
 
-    const categoria = req.query.categoria || 'Todos';  
+    const categoria = req.query.categoria || 'Todos';  // Obtém a categoria da query string ou 'Todos' por padrão
 
     try {
-        let query = 'SELECT * FROM products';
+        let query = 'SELECT * FROM products';  // Consulta inicial
         let values = [];
 
         if (categoria !== 'Todos') {
-            query += ' WHERE categoria = $1'; 
+            query += ' WHERE categoria = $1';  // Aplica filtro para categoria
             values = [categoria];
         }
 
-        const result = await client.query(query, values);
+        const result = await client.query(query, values);  // Executa a consulta no banco
         const produtos = result.rows.map(produto => ({
             ...produto,
-            preco: parseFloat(produto.preco)  
+            preco: parseFloat(produto.preco),  // Converte o preço para número
         }));
 
+        // Renderiza a página do painel com os dados de produtos
         res.render('adminpanel', { user, produtos, categoria });
     } catch (error) {
-        console.error(error);
+        console.error(error);  // Log de erro
         res.status(500).send('Erro ao carregar o painel de administração.');
     }
 });
+
 
 // Rota para adicionar um produto ao carrinho
 app.post('/adicionar-carrinho', (req, res) => {
@@ -273,7 +297,6 @@ const buscarProdutoPorId = async (id) => {
 };
 
 // Rota para exibir o produto
-// Rota para exibir o produto
 app.get('/produto/:id', async (req, res) => {
     try {
         const produto = await buscarProdutoPorId(req.params.id); // Agora a função está implementada
@@ -281,11 +304,18 @@ app.get('/produto/:id', async (req, res) => {
             return res.status(404).send('Produto não encontrado.');
         }
 
+        // Cálculos de preço com desconto
+        const desconto = 0.03; // 3% de desconto
+        const precoComDesconto = produto.preco * (1 - desconto);
+        const economia = produto.preco - precoComDesconto;
+
         // Certifique-se de incluir `req.session.carrinho` no contexto da renderização
         res.render('produto', { 
             produto, 
             user: req.session.user || null, 
-            carrinho: req.session.carrinho || [] // Passa o carrinho para a view, mesmo que vazio
+            carrinho: req.session.carrinho || [], // Passa o carrinho para a view, mesmo que vazio
+            precoComDesconto,  // Passa o preço com desconto
+            economia           // Passa a economia
         });
     } catch (error) {
         console.error('Erro ao carregar o produto:', error);

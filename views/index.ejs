@@ -66,20 +66,110 @@
 
 
 
-    <!-- Menu de navegação -->
-    <nav class="bg-blue-700 text-white py-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <button id="categories-button" class="hover:text-blue-300">Todas Categorias</button>
-            <!-- Link para a Home (Página principal) -->
-            <a href="/" class="hover:text-blue-300">Home</a>
-            <!-- Links com filtro por categoria -->
-            <a href="/?categoria=Imagens" class="hover:text-blue-300">Imagens</a>
-            <a href="/?categoria=Camisetas" class="hover:text-blue-300">Camisetas</a>
-            <a href="/?categoria=Acessorios" class="hover:text-blue-300">Acessórios</a>
-            <a href="/?categoria=Canecas" class="hover:text-blue-300">Canecas</a>
-            <a href="/?categoria=Liturgias" class="hover:text-blue-300">Liturgias</a>
-        </div>
-    </nav>
+   <!-- Menu de navegação -->
+<nav class="bg-blue-700 text-white py-4">
+    <div class="container mx-auto flex justify-between items-center">
+        <!-- Link para a Home (Página principal) -->
+        <a href="/" class="hover:text-blue-300">Home</a>
+        <!-- Links com filtro por categoria -->
+        <a href="/?categoria=Imagens" id="imagens-link" class="hover:text-blue-300">Imagens</a>
+        <a href="/?categoria=Camisetas" class="hover:text-blue-300">Camisetas</a>
+        <a href="/?categoria=Acessorios" class="hover:text-blue-300">Acessórios</a>
+        <a href="/?categoria=Canecas" class="hover:text-blue-300">Canecas</a>
+        <a href="/?categoria=Liturgias" class="hover:text-blue-300">Liturgias</a>
+    </div>
+</nav>
+
+<!-- Menu lateral -->
+<div id="lateral-menu" class="lateral-menu">
+    <div class="menu-header">
+        <span class="close-btn" id="close-menu">&times;</span>
+    </div>
+    <div class="menu-items">
+        <a href="/?categoria=SaoJorge" class="menu-item">São Jorge</a>
+        <a href="/?categoria=SaoFrancisco" class="menu-item">São Francisco</a>
+        <a href="/?categoria=SaoPaulo" class="menu-item">São Paulo</a>
+        <a href="/?categoria=SantaTeresa" class="menu-item">Santa Teresa</a>
+        <a href="/?categoria=SaoAntonio" class="menu-item">São Antônio</a>
+        <a href="/?categoria=SantaTerezinha" class="menu-item">Santa Terezinha</a>
+        <a href="/?categoria=SaoPedro" class="menu-item">São Pedro</a>
+        <a href="/?categoria=SantaRita" class="menu-item">Santa Rita</a>
+        <a href="/?categoria=SantaLucia" class="menu-item">Santa Lúcia</a>
+        <a href="/?categoria=Maria" class="menu-item">Maria</a>
+    </div>
+</div>
+
+<!-- Estilos do menu lateral -->
+<style>
+    /* Estilo do menu lateral */
+    .lateral-menu {
+        height: 100%;
+        width: 0;
+        position: fixed;
+        z-index: 100;
+        top: 0;
+        left: 0;
+        background-color: #1e3a8a; /* Azul suave */
+        overflow-x: hidden;
+        transition: 0.3s;
+        padding-top: 60px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        border-radius: 10px 0 0 10px; /* Bordas arredondadas */
+    }
+
+    /* Estilo dos itens do menu */
+    .menu-item {
+        padding: 12px 24px;
+        text-decoration: none;
+        font-size: 18px;
+        color: white;
+        display: block;
+        transition: 0.3s;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Delicada linha de separação */
+    }
+
+    .menu-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffdd57; /* Cor suave ao passar o mouse */
+    }
+
+    /* Estilo do cabeçalho do menu */
+    .menu-header {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 16px;
+    }
+
+    .close-btn {
+        font-size: 36px;
+        color: white;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+    .close-btn:hover {
+        color: #ffdd57; /* Cor de destaque ao passar o mouse */
+    }
+</style>
+
+<script>
+    // Abrir o menu lateral ao clicar no link "Imagens"
+    const imagensLink = document.getElementById('imagens-link');
+    const lateralMenu = document.getElementById('lateral-menu');
+    const closeMenu = document.getElementById('close-menu');
+
+    imagensLink.addEventListener('click', (event) => {
+        event.preventDefault(); // Impede a navegação imediata
+        lateralMenu.style.width = '250px'; // Exibe o menu lateral
+    });
+
+    // Fechar o menu lateral
+    closeMenu.addEventListener('click', () => {
+        lateralMenu.style.width = '0'; // Esconde o menu lateral
+    });
+</script>
+
     <div class="w-full">
         <img src="https://static.lvartigosreligiosos.com.br/public/liriodovale/imagens/banners/b16312d1e3bc7ac93b4de0547f776c9f-opt.png" alt="Banner" class="w-full h-[300px] object-cover">
     </div>
